@@ -51,12 +51,13 @@ int		lgetc(int);
 int		lungetc(int);
 int		findeol(void);
 
-struct ewd_conf	*conf;
+struct ewd_conf		*conf;
 
 typedef struct {
 	union {
 		int64_t			 number;
 		char			*string;
+		struct rule		*rule;
 	} v;
 	int lineno;
 } YYSTYPE;
@@ -68,6 +69,8 @@ typedef struct {
 %token	ERROR
 %token	<v.string>		STRING
 %token	<v.number>		NUMBER
+%type	<v.rule>		filename
+%type	<v.rule>		command
 
 %%
 
@@ -77,43 +80,31 @@ grammar		: /* empty */
 		| grammar error '\n'		{ file->errors++; }
 		;
 
-main		: watch_all nl_opt run_all
-		;
+main		: WATCH filename RUN command {
+			struct rule		*r;
 
-watch_all	: WATCH watch
-		;
+			printf("The filename is: %s\n", $2->filename);
+			printf("The command  is: %s\n", $4->command);
 
-watch		: nl_opt filename {
-			printf(": watch\n");
-		}
-		| nl_opt '{' nl_opt filename nl_opt '}' {
-			printf(": watch nl\n");
+			if ((r = calloc(1, sizeof(struct rule))) == NULL) {
+				fatal("calloc");
+			}
+			r->filename = $2->filename;
+			r->command = $4->command;
+			TAILQ_INSERT_TAIL(&conf->rules, r, entry);
 		}
 		;
 
 filename	: STRING {
-			printf("filename is: %s\t", $1);
-		}
-		;
-
-run_all		: RUN run
-		;
-
-run		: nl_opt command {
-			printf(": run\n\n");
-		}
-		| nl_opt '{' nl_opt command nl_opt '}' {
-			printf(": run nl\n\n");
+			$$->filename = strdup($1);
+			printf("filename is: %s\n", $$->filename);
 		}
 		;
 
 command		: STRING {
-			printf("command  is: %s\t", $1);
+			$$->command = strdup($1);
+			printf("command  is: %s\n", $$->command);
 		}
-		;
-
-nl_opt		: '\n' nl_opt
-		| /* optional */
 		;
 
 %%
@@ -427,6 +418,7 @@ parse_config(const char *filename, struct ewd_conf *xconf)
 	int		 errors = 0;
 
 	conf = xconf;
+	TAILQ_INIT(&conf->rules);
 
 	if ((file = pushfile(filename)) == NULL) {
 		return (-1);
@@ -436,6 +428,8 @@ parse_config(const char *filename, struct ewd_conf *xconf)
 	yyparse();
 	errors = file->errors;
 	popfile();
+
+	printf("XXX - errors %d\n", errors);
 
 	return (errors ? -1 : 0);
 }

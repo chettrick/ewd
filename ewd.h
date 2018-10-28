@@ -18,17 +18,28 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/queue.h>
 #include <stdarg.h>
 
 #define CONFFILE	"/etc/ewd.conf"
 
+struct rule {
+	TAILQ_ENTRY(rule)	 entry;
+        char            	*filename;
+        char            	*command;
+};
+
 struct ewd_conf {
-	int		debug;
-	int		verbose;
-	u_int8_t	noaction;
+	TAILQ_HEAD(rules, rule)	rules;
+	int			debug;
+	int			verbose;
+	u_int8_t		noaction;
 };
 
 /* prototypes */
+
+/* ewd.c */
+extern struct ewd_conf *conf;
 
 /* parse.y */
 int		parse_config(const char *, struct ewd_conf *);

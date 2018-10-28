@@ -28,21 +28,13 @@
 __dead void	usage(void);
 int		main(int, char *[]);
 
-__dead void
-usage(void)
-{
-	extern char		*__progname;
-
-	fprintf(stderr, "usage: %s [-dnv] [-f file]\n", __progname);
-	exit(1);
-}
-
 int
 main(int argc, char *argv[])
 {
 	struct ewd_conf		 lconf;
 	const char 		*conffile;
 	int			 ch;
+	struct rule		*r;
 
 	conffile = CONFFILE;
 
@@ -82,5 +74,22 @@ main(int argc, char *argv[])
 		exit(0);
 	}
 
+	TAILQ_FOREACH(r, &conf->rules, entry) {
+		printf("\nNext rule:\n");
+		printf("The filename is: %s\n", r->filename);
+		printf("The command is:  %s\n", r->command);
+		system(r->command);
+	}
+
+
 	return (0);
+}
+
+__dead void
+usage(void)
+{
+	extern char		*__progname;
+
+	fprintf(stderr, "usage: %s [-dnv] [-f file]\n", __progname);
+	exit(1);
 }
