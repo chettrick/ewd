@@ -93,10 +93,6 @@ main(int argc, char *argv[])
 	}
 
 	TAILQ_FOREACH(r, &conf->rules, entry) {
-		printf("\nNext rule:\n");
-		printf("The filename is: %s\n", r->filename);
-		printf("The command is:  %s\n", r->command);
-
 		if ((fd = open(r->filename, O_RDONLY)) == -1) {
 			fprintf(stderr, "can't open: %s\n", r->filename);
 		}

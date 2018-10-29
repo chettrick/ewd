@@ -23,6 +23,7 @@
 %{
 
 #include <sys/queue.h>
+
 #include <ctype.h>
 #include <limits.h>
 #include <stdarg.h>
@@ -83,9 +84,6 @@ grammar		: /* empty */
 main		: WATCH filename RUN command {
 			struct rule		*r;
 
-			printf("The filename is: %s\n", $2->filename);
-			printf("The command  is: %s\n", $4->command);
-
 			if ((r = calloc(1, sizeof(struct rule))) == NULL) {
 				fatal("calloc");
 			}
@@ -97,13 +95,11 @@ main		: WATCH filename RUN command {
 
 filename	: STRING {
 			$$->filename = strdup($1);
-			printf("filename is: %s\n", $$->filename);
 		}
 		;
 
 command		: STRING {
 			$$->command = strdup($1);
-			printf("command  is: %s\n", $$->command);
 		}
 		;
 
@@ -428,8 +424,6 @@ parse_config(const char *filename, struct ewd_conf *xconf)
 	yyparse();
 	errors = file->errors;
 	popfile();
-
-	printf("XXX - errors %d\n", errors);
 
 	return (errors ? -1 : 0);
 }
