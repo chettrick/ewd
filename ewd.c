@@ -18,6 +18,11 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
+
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +30,8 @@
 #include <unistd.h>
 
 #include "ewd.h"
+
+#define NOTES	NOTE_DELETE|NOTE_WRITE|NOTE_TRUNCATE|NOTE_ATTRIB|NOTE_RENAME
 
 __dead void	usage(void);
 int		main(int, char *[]);
@@ -36,6 +43,9 @@ main(int argc, char *argv[])
 	const char 		*conffile;
 	int			 ch;
 	struct rule		*r;
+	int			 kq;
+	struct kevent		 ke;
+	int			 fd;
 
 	conffile = CONFFILE;
 
@@ -78,13 +88,31 @@ main(int argc, char *argv[])
 		exit(0);
 	}
 
+	if ((kq = kqueue()) < 0) {
+		fatal("kqueue");
+	}
+
 	TAILQ_FOREACH(r, &conf->rules, entry) {
 		printf("\nNext rule:\n");
 		printf("The filename is: %s\n", r->filename);
 		printf("The command is:  %s\n", r->command);
-		system(r->command);
+
+		if ((fd = open(r->filename, O_RDONLY)) == -1) {
+			fprintf(stderr, "can't open: %s\n", r->filename);
+		}
+
+		EV_SET(&ke, fd, EVFILT_VNODE, EV_ADD|EV_CLEAR, NOTES, 0,
+		    (void *)r);
+
+		if (kevent(kq, &ke, 1, NULL, 0, NULL) == -1) {
+			fatal("kevent");
+		}
 	}
 
+	for (;;) {
+		kevent(kq, NULL, 0, &ke, 1, NULL);
+		system(((struct rule *)ke.udata)->command);
+	}
 
 	return (0);
 }
