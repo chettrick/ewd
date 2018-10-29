@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 
 #include "ewd.h"
@@ -60,6 +61,9 @@ main(int argc, char *argv[])
 			/* NOTREACHED */
 		}
 	}
+
+	/* log to stderr until daemonized */
+	log_init(lconf.debug ? lconf.debug : 1, LOG_DAEMON);
 
 	argc -= optind;
 	argv += optind;
