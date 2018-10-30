@@ -89,7 +89,7 @@ main		: WATCH filename RUN command {
 			}
 			r->filename = $2->filename;
 			r->command = $4->command;
-			TAILQ_INSERT_TAIL(&conf->rules, r, entry);
+			TAILQ_INSERT_HEAD(&conf->rules, r, entry);
 		}
 		;
 
