@@ -5,7 +5,9 @@ BINDIR?=${PREFIX}/bin
 MANDIR?=${PREFIX}/man/man
 
 PROG=	ewd
-SRCS=	ewd.c log.c parse.y
+
+SRCS_C=	ewd.c log.c
+SRCS_Y=	parse.y
 
 CFLAGS+= -Wall -I${.CURDIR}
 CFLAGS+= -fstack-protector-all
@@ -20,9 +22,12 @@ YFLAGS=
 
 NOMAN=	ewd.8 ewd.conf.5 ew.8
 
-OBJS=	${SRCS:.y=.c:.c=.o}
+OBJS=	${SRCS_Y:.y=.o} ${SRCS_C:.c=.o}
 
 all: ${PROG}
+
+test:
+	${MAKE} -C regress
 
 ${PROG}: ${OBJS}
 	${CC} ${CFLAGS} ${LDFLAGS} -o $@ ${OBJS}
@@ -30,4 +35,4 @@ ${PROG}: ${OBJS}
 clean:
 	rm -f a.out [Ee]rrs mklog *.core y.tab.h ${PROG} *.o *.d
 
-.PHONY: all clean
+.PHONY: all test clean
