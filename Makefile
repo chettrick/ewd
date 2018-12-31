@@ -20,4 +20,14 @@ YFLAGS=
 
 NOMAN=	ewd.8 ewd.conf.5 ew.8
 
-.include <bsd.prog.mk>
+OBJS=	${SRCS:.y=.c:.c=.o}
+
+all: ${PROG}
+
+${PROG}: ${OBJS}
+	${CC} ${CFLAGS} ${LDFLAGS} -o $@ ${OBJS}
+
+clean:
+	rm -f a.out [Ee]rrs mklog *.core y.tab.h ${PROG} *.o *.d
+
+.PHONY: all clean
